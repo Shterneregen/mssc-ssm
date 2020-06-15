@@ -1,5 +1,6 @@
 package guru.springframework.msscssm.services;
 
+import com.google.common.base.Strings;
 import guru.springframework.msscssm.domain.Payment;
 import guru.springframework.msscssm.domain.PaymentEvent;
 import guru.springframework.msscssm.domain.PaymentState;
@@ -13,11 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @SpringBootTest
 class PaymentServiceImplTest {
+
+    private static final int SEP_COUNT = 50;
 
     @Autowired
     private PaymentService paymentService;
@@ -35,14 +38,28 @@ class PaymentServiceImplTest {
     @Test
     void preAuth() {
         Payment savedPayment = paymentService.newPayment(payment);
-//        assertEquals(PaymentState.NEW, savedPayment.getState());
-        System.out.println(savedPayment);
-
         StateMachine<PaymentState, PaymentEvent> sm = paymentService.preAuth(savedPayment.getId());
-        System.out.println(sm.getState().getId());
-
         Payment preAuthedPayment = paymentRepository.getOne(savedPayment.getId());
-//        assertEquals(PaymentState.PRE_AUTH, savedPayment.getState());
+        assertTrue(PaymentState.PRE_AUTH.equals(preAuthedPayment.getState())
+                || PaymentState.PRE_AUTH_ERROR.equals(preAuthedPayment.getState()));
+
+        System.out.println(Strings.repeat("*", SEP_COUNT));
         System.out.println(preAuthedPayment);
+        System.out.println(Strings.repeat("*", SEP_COUNT));
+    }
+
+    @Transactional
+    @Test
+    void auth() {
+        Payment savedPayment = paymentService.newPayment(payment);
+        savedPayment.setState(PaymentState.PRE_AUTH);
+        StateMachine<PaymentState, PaymentEvent> sm = paymentService.authorizePayment(savedPayment.getId());
+        Payment authOrAuthErrorPayment = paymentRepository.getOne(savedPayment.getId());
+        assertTrue(PaymentState.AUTH.equals(authOrAuthErrorPayment.getState())
+                || PaymentState.AUTH_ERROR.equals(authOrAuthErrorPayment.getState()));
+
+        System.out.println(Strings.repeat("*", SEP_COUNT));
+        System.out.println(authOrAuthErrorPayment);
+        System.out.println(Strings.repeat("*", SEP_COUNT));
     }
 }
