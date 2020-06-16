@@ -6,6 +6,7 @@ import guru.springframework.msscssm.domain.PaymentEvent;
 import guru.springframework.msscssm.domain.PaymentState;
 import guru.springframework.msscssm.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,13 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+import static guru.springframework.msscssm.Utils.LOG_SEPARATOR_COUNT;
+import static guru.springframework.msscssm.Utils.LOG_SEPARATOR_STRING;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 
 @SpringBootTest
 class PaymentServiceImplTest {
-
-    private static final int SEP_COUNT = 50;
 
     @Autowired
     private PaymentService paymentService;
@@ -43,13 +43,13 @@ class PaymentServiceImplTest {
         assertTrue(PaymentState.PRE_AUTH.equals(preAuthedPayment.getState())
                 || PaymentState.PRE_AUTH_ERROR.equals(preAuthedPayment.getState()));
 
-        System.out.println(Strings.repeat("*", SEP_COUNT));
+        System.out.println(Strings.repeat(LOG_SEPARATOR_STRING, LOG_SEPARATOR_COUNT));
         System.out.println(preAuthedPayment);
-        System.out.println(Strings.repeat("*", SEP_COUNT));
+        System.out.println(Strings.repeat(LOG_SEPARATOR_STRING, LOG_SEPARATOR_COUNT));
     }
 
     @Transactional
-    @Test
+    @RepeatedTest(3)
     void auth() {
         Payment savedPayment = paymentService.newPayment(payment);
         savedPayment.setState(PaymentState.PRE_AUTH);
@@ -58,8 +58,8 @@ class PaymentServiceImplTest {
         assertTrue(PaymentState.AUTH.equals(authOrAuthErrorPayment.getState())
                 || PaymentState.AUTH_ERROR.equals(authOrAuthErrorPayment.getState()));
 
-        System.out.println(Strings.repeat("*", SEP_COUNT));
+        System.out.println(Strings.repeat("*", LOG_SEPARATOR_COUNT));
         System.out.println(authOrAuthErrorPayment);
-        System.out.println(Strings.repeat("*", SEP_COUNT));
+        System.out.println(Strings.repeat("*", LOG_SEPARATOR_COUNT));
     }
 }
